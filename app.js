@@ -149,6 +149,24 @@
             document.getElementById("nav-profile-tab").click();
         };
 
+        bbpList.editRouting =function(track, day){
+            let mapString = '[map=7,51.31,9.48] ' + ' [/map]';
+            var mapBBcode = new MapBBCode({
+                windowPath: './mapbbcode/',
+                layers: 'RailwayMap',
+                defaultPosition: [22, 11],
+                viewWidth: 900,
+                viewHeight: 450,
+                fullViewHeight: 600,
+                allowedHTML: 'span|i|h6|br|input|li|ul|p|b|div|label|button|table|thead|tbody|tr|th|td',
+                fullFromStart: false,
+                fullViewHeight: -1, 
+                defaultZoom: 8
+            });
+            mapBBcode.show('railmap', mapString);
+            document.getElementById("nav-mfb-tab").click();
+        };
+
         function getLevel(load){
             if(load < 0.8){return {'Lv': 1, 'Col': "#0087B9"};}
             if(load < 1.08){return {'Lv': 2, 'Col': "#007841"};}
