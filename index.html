@@ -95,7 +95,7 @@
             <div class="form-group">              
               <div class="col-md-8">                
                 <input type="file" id="list" class="form-control form-control-lg" ng-model="mfbList.Filename" accept=".csv" placeholder="Liste auswählen"> <p></p>
-                <p><b>Achtung</b> Es werden keinerlei Daten ins Netz hochgeladen. Der Verarbeitung der Daten und Erzeugung der Tabelle erfolgt ausschließlich auf dem lokalen Rechner.</p>
+                <p><b>Achtung</b> Es werden keinerlei Daten ins Netz hochgeladen. Der Verarbeitung der Daten und Erzeugung der Tabellen erfolgt ausschließlich auf dem lokalen Rechner.</p>
   
                 <button type="button" class="btn btn-secondary btn-lg" ng-click="bbpList.findOverload();">
                     <i class="far fa-file-alt"></i>                    
@@ -109,21 +109,91 @@
             <nav>
               <div class="nav nav-tabs" id="nav-tab" role="tablist">
                 <button class="nav-link active text-danger" id="nav-home-tab" data-bs-toggle="tab" data-bs-target="#nav-home" type="button" role="tab" aria-controls="nav-home" aria-selected="true">Streckenanalyse</button>
-                <button class="nav-link text-danger" id="nav-profile-tab" data-bs-toggle="tab" data-bs-target="#nav-profile" type="button" role="tab" aria-controls="nav-profile" aria-selected="false">Auslastung bearbeiten</button>
+                <button class="nav-link text-danger" id="nav-profile-tab" data-bs-toggle="tab" data-bs-target="#nav-profile" type="button" role="tab" aria-controls="nav-profile" aria-selected="false">Details Auslastung</button>
                 <button class="nav-link text-danger" id="nav-mfb-tab" data-bs-toggle="tab" data-bs-target="#nav-mfb" type="button" role="tab" aria-controls="nav-mfb" aria-selected="false">Umleitungen bearbeiten</button>
                 <button class="nav-link text-light" id="nav-edit-tab" data-bs-toggle="tab" data-bs-target="#nav-edit" type="button" role="tab" aria-controls="nav-edit" aria-selected="false">&nbsp;</button>
               </div>
             </nav>
             <div class="tab-content" id="nav-tabContent">              
               <div class="tab-pane fade show active" id="nav-home" role="tabpanel" aria-labelledby="nav-home-tab">
-                <div class="col-md-8">
-                    Überblick Streckenauslastung für das Gesamtnetz.
+                <div class="col-md-10">
+                    <table class="table table-hover text-center">
+                        <thead>
+                            <tr class="table-secondary">
+                                <th>Strecke</th>
+                                <th>Abschnitt</th>
+                                <th>Auslastungsstufe</th>
+                                <th>Max. Auslastung</th>   
+                                <th>Nennleistung unter Bau</th>
+                                <th>SPFV</th>
+                                <th>SPNV</th>
+                                <th>SGV</th>
+                                <th>Details</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr ng-repeat="tr in bbpList.TrackAnalysis | orderBy:['-MaxLoad', 'Strecke']">
+                                <td>{{tr.Strecke}}</td>
+                                <td>{{tr.From}} - {{tr.To}}</td>
+                                <td ng-style="{'background-color': tr.Level.Col, 'color': 'white'}"><b>Stufe {{tr.Level.Lv}}</b></td>
+                                <td>
+                                    <span class="animate-show-hide ng-show" ng-hide="tr.MaxLoad===999999">{{tr.MaxLoad}} %</span>
+                                    <span class="animate-show-hide ng-show" ng-show="tr.MaxLoad===999999">Totalsperrung</span>
+                                </td>
+                                <td>{{tr.Nennleistung}}</td>
+                                <td>{{tr.SPFV}}</td>
+                                <td>{{tr.SPNV}}</td>
+                                <td>{{tr.SGV}}</td>
+                                <td>
+                                    <button type="button button-sm" ng-click="bbpList.showDetails(tr.Strecke);" class="btn btn-outline-secondary">
+                                        <i class="far fa-hand-pointer"></i>
+                                    </button>
+                                </td>
+                            </tr>
+                        </tbody>
+                    </table>
                 </div>
               </div>
 
               <div class="tab-pane fade" id="nav-profile" role="tabpanel" aria-labelledby="nav-profile-tab">
-                <div class="col-md-8">
-                    Auslastungen einer Strecke werden hier analysiert und bearbeitet.
+                <div class="col-md-10">
+                    <h4>Strecke {{bbpList.showTrack}}</h4>
+                    <h5>{{bbpList.FromDate}} - {{bbpList.ToDate}}</h5>
+                    <table class="table table-hover text-center">
+                        <thead>
+                            <tr class="table-secondary">
+                                <th>Datum</th>
+                                <th>Abschnitt</th>
+                                <th>Auslastungsstufe</th>
+                                <th>Max. Auslastung</th>   
+                                <th>Nennleistung unter Bau</th>
+                                <th>SPFV</th>
+                                <th>SPNV</th>
+                                <th>SGV</th>
+                                <th>Bearbeiten</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr ng-repeat="tr in bbpList.LoadAnalysis | orderBy:['Date.DNumber']">
+                                <td>{{tr.Date.DText}}</td>
+                                <td>{{tr.From}} - {{tr.To}}</td>
+                                <td ng-style="{'background-color': tr.Level.Col, 'color': 'white'}"><b>Stufe {{tr.Level.Lv}}</b></td>
+                                <td>
+                                    <span class="animate-show-hide ng-show" ng-hide="tr.MaxLoad===999999">{{tr.MaxLoad}} %</span>
+                                    <span class="animate-show-hide ng-show" ng-show="tr.MaxLoad===999999">Totalsperrung</span>
+                                </td>
+                                <td>{{tr.Nennleistung}}</td>
+                                <td>{{tr.SPFV}}</td>
+                                <td>{{tr.SPNV}}</td>
+                                <td>{{tr.SGV}}</td>
+                                <td>
+                                    <button type="button button-sm" ng-click="" class="btn btn-outline-secondary">
+                                        <i class="fas fa-route"></i>
+                                    </button>
+                                </td>
+                            </tr>
+                        </tbody>
+                    </table>                                        
                 </div>
               </div>
 
