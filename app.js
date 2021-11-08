@@ -150,7 +150,7 @@
         };
 
         bbpList.editRouting =function(track, day){
-            let mapString = '[map=7,51.31,9.48] ' + ' [/map]';
+            let mapString = '[map=7,50.81,8.77] ' + ' [/map]';
             var mapBBcode = new MapBBCode({
                 windowPath: './mapbbcode/',
                 layers: 'RailwayMap',
