@@ -117,7 +117,7 @@
             </nav>
             <div class="tab-content" id="nav-tabContent">              
               <div class="tab-pane fade show active" id="nav-home" role="tabpanel" aria-labelledby="nav-home-tab">
-                <div class="col-md-10">
+                <div class="col-md-8">
                     <table class="table table-hover text-center">
                         <thead>
                             <tr class="table-secondary">
@@ -146,7 +146,7 @@
                                 <td>{{tr.SPNV}}</td>
                                 <td>{{tr.SGV}}</td>
                                 <td>
-                                    <button type="button button-sm" ng-click="bbpList.showDetails(tr.Strecke);" class="btn btn-outline-secondary">
+                                    <button type="button btn-sm" ng-click="bbpList.showDetails(tr.Strecke);" class="btn btn-outline-secondary">
                                         <i class="far fa-hand-pointer"></i>
                                     </button>
                                 </td>
@@ -157,7 +157,7 @@
               </div>
 
               <div class="tab-pane fade" id="nav-profile" role="tabpanel" aria-labelledby="nav-profile-tab">
-                <div class="col-md-10">
+                <div class="col-md-8">
                     <h4>Strecke {{bbpList.showTrack}}</h4>
                     <h5>{{bbpList.FromDate}} - {{bbpList.ToDate}}</h5>
                     <table class="table table-hover text-center">
@@ -188,7 +188,7 @@
                                 <td>{{tr.SPNV}}</td>
                                 <td>{{tr.SGV}}</td>
                                 <td>
-                                    <button type="button button-sm" ng-click="bbpList.editRouting(bbpList.showTrack, tr);" class="btn btn-outline-secondary">
+                                    <button type="button btn-sm" ng-click="bbpList.editRouting(bbpList.showTrack, tr);" class="btn btn-outline-secondary">
                                         <i class="fas fa-route"></i>
                                     </button>
                                 </td>
@@ -253,9 +253,73 @@
                     </div>
                   </div>
                   <hr>                    
-                    <div class="col-md-10">
-                        <h4>Bearbeitungsfenster</h4>
-                        <p>Hier werden die Zugmengen zur Ausregelung bearbeitet.</p>
+                    <div class="col-md-12">
+                        <h4>Bearbeitung der Züge</h4>
+                        <div class="row">
+                          <div class="col-md-4">
+                            <h5>Auswahl Streckenabschnitt</h5>
+                            <div>
+                              <div class="input-group mb-3">
+                                <span class="input-group-text" id="track">Strecke</span>
+                                <input type="text" class="form-control" placeholder="Strecke" aria-label="Strecke" aria-describedby="track" ng-model="bbpList.selectTrack">
+                                <button type="button btn-sm" ng-click="bbpList.updateSelectedTrack(bbpList.selectTrack, bbpList.EditRow.Date.DNumber);" class="btn btn-outline-secondary">Strecke laden</button>
+                              </div>
+                              <div class="input-group mb-3">
+                                <input type="text" class="form-control" placeholder="von" aria-label="von" ng-model="bbpList.fromBTS">
+                                <span class="input-group-text"><i class="fas fa-arrow-alt-circle-right"></i></span>
+                                <input type="text" class="form-control" placeholder="nach" aria-label="nach" ng-model="bbpList.toBTS">
+                              </div>
+                              <div>
+                                <table class="table table-borderless table-sm">
+                                  <td><p class="text-right">Abschnitt Entlastung</p></td>
+                                  <td>
+                                    <div class="form-check form-switch">                                      
+                                      <input class="form-check-input" type="checkbox" id="flexSwitchCheckDefault">
+                                      <label class="form-check-label" for="flexSwitchCheckDefault">Abschnitt Umleitung</label>
+                                    </div>
+                                  </td>
+                                </table>
+                              </div>  
+                              <div>
+                                <button type="button" ng-click="" class="btn btn-outline-secondary">Abschnitt hinzufügen</button>
+                              </div>                              
+                            </div>
+                            <div>
+                              <table class="table table-hover table-sm text-center">
+                                <thead>
+                                  <tr>
+                                    <th>Abschnitt</th>
+                                    <th>Strecke</th>
+                                    <th>Stufe</th>
+                                    <th>Auslastung</th>
+                                    <th>&nbsp;</th>
+                                  </tr>
+                                </thead>
+                                <tbody>
+                                  <tr ng-repeat="e in bbpList.selectedRoute | orderBy:['id']">
+                                    <td>{{e.section.Streckennummer}}</td>
+                                    <td>{{e.section['Von Betriebsstelle']}} - {{e.section['Bis Betriebsstelle']}}</td>
+                                    <td ng-style="{'background-color': e.level.Col, 'color': 'white'}"><b>Stufe {{e.level.Lv}}</b></td>
+                                    <td>
+                                      <span class="animate-show-hide ng-show" ng-hide="e.MaxLoad===999999">{{e.MaxLoad}} %</span>
+                                      <span class="animate-show-hide ng-show" ng-show="e.MaxLoad===999999">Totalsperrung</span>
+                                    </td>
+                                    <td>
+                                      <button type="button btn-sm" ng-click="bbpList.setStart(e.id);" class="btn btn-outline-secondary">S</button>
+                                      <button type="button btn-sm" ng-click="bbpList.setEnd(e.id);" class="btn btn-outline-secondary">E</button>
+                                    </td>
+                                  </tr>
+                                </tbody>
+                              </table>
+                            </div>
+                          </div>
+                          <div class="col-md-3">
+                            <h5>Abschnitt Entlastung</h5>
+                          </div>
+                          <div class="col-md-3">
+                            <h5>Abschnitt Umleitung</h5>
+                          </div>
+                        </div>
                     </div>                
               </div>
 

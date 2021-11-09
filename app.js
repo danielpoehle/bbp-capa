@@ -21,6 +21,12 @@
         bbpList.CapaList = [];
         bbpList.TrackAnalysis = [];
         bbpList.LoadAnalysis = [];
+        bbpList.oldRoute = [];
+        bbpList.newRoute = [];
+        bbpList.selectedRoute = [];
+        bbpList.selectTrack = '';
+        bbpList.fromBTS = '';
+        bbpList.toBTS = '';
 
         bbpList.findOverload = function(){
             bbpList.TrackAnalysis = [];
@@ -154,11 +160,13 @@
 
         bbpList.editRouting =function(track, row){
             bbpList.EditRow = row;
-            bbpList.showTrack = track;
+            bbpList.showTrack = track;            
+            bbpList.oldRoute = [];
+            bbpList.newRoute = [];
+            bbpList.updateSelectedTrack(track, row.Date.DNumber);
 
             bbpList.redLv3 = Math.ceil((row.MaxLoad/100.0 - 1.15)*row.Nennleistung);
-            bbpList.redLv4 = Math.ceil((row.MaxLoad/100.0 - 1.25)*row.Nennleistung);
-            
+            bbpList.redLv4 = Math.ceil((row.MaxLoad/100.0 - 1.25)*row.Nennleistung);            
 
             let mapString = '[map=7,50.81,8.77] ' + ' [/map]';
             var mapBBcode = new MapBBCode({
@@ -174,7 +182,56 @@
                 defaultZoom: 8
             });
             mapBBcode.show('railmap', mapString);
+
             document.getElementById("nav-mfb-tab").click();
+        };
+
+        bbpList.updateSelectedTrack = function(track, date){
+            bbpList.selectTrack = track;
+            bbpList.selectedRoute = [];
+            bbpList.fromBTS = '';
+            bbpList.toBTS = '';
+            let trackList = bbpList.CapaList.filter((c) => c.Streckennummer === track && c.Verkehrsart === 'Alle' && c.Datum.DNumber === date);
+            let start = trackList.map((c) => c['Von Betriebsstelle']);
+            let end = trackList.map((c) => c['Bis Betriebsstelle']);
+            let firstBts = start.filter((x) => !end.includes(x))[0];
+            for (let i = 0; i < trackList.length; i+=1) {
+                const element = trackList.find((c) => c['Von Betriebsstelle'] === firstBts);
+                firstBts = element['Bis Betriebsstelle'];
+                if(element['Nennleistung unter Bau'] === 0){
+                    bbpList.selectedRoute.push({
+                        'id': i,
+                        'section': element,
+                        'level': element['Anzahl Züge Fahrplan']>0 ? {'Lv': 6, 'Col': "#B20000"} : {'Lv': 1, 'Col': "#0087B9"},
+                        'MaxLoad': element['Anzahl Züge Fahrplan']>0 ? 999999 : 0 
+                    });
+                }else{
+                    bbpList.selectedRoute.push({
+                        'id': i,
+                        'section': element,
+                        'level': getLevel(element['Auslastung Fahrplan unter Bau']),
+                        'MaxLoad': Math.round(100.0*element['Auslastung Fahrplan unter Bau'])
+                    });
+                    
+                }
+                
+            }
+        };
+
+        bbpList.setStart = function(id){
+            if(id === bbpList.selectedRoute.length-1){
+                bbpList.fromBTS = bbpList.selectedRoute.find((c) => c.id === id).section['Bis Betriebsstelle'];
+            }else{
+                bbpList.fromBTS = bbpList.selectedRoute.find((c) => c.id === id).section['Von Betriebsstelle'];
+            }            
+        };
+
+        bbpList.setEnd = function(id){
+            if(id === 0){
+                bbpList.toBTS = bbpList.selectedRoute.find((c) => c.id === id).section['Von Betriebsstelle'];
+            }else{
+                bbpList.toBTS = bbpList.selectedRoute.find((c) => c.id === id).section['Bis Betriebsstelle'];
+            }             
         };
 
         function getLevel(load){
