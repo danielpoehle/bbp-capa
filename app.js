@@ -14,6 +14,9 @@
         bbpList.showTrack = '';
         bbpList.FromDate = '';
         bbpList.ToDate = '';
+        bbpList.EditRow = '';
+        bbpList.redLv3 = -1;
+        bbpList.redLv4 = -1;
 
         bbpList.CapaList = [];
         bbpList.TrackAnalysis = [];
@@ -149,7 +152,14 @@
             document.getElementById("nav-profile-tab").click();
         };
 
-        bbpList.editRouting =function(track, day){
+        bbpList.editRouting =function(track, row){
+            bbpList.EditRow = row;
+            bbpList.showTrack = track;
+
+            bbpList.redLv3 = Math.ceil((row.MaxLoad/100.0 - 1.15)*row.Nennleistung);
+            bbpList.redLv4 = Math.ceil((row.MaxLoad/100.0 - 1.25)*row.Nennleistung);
+            
+
             let mapString = '[map=7,50.81,8.77] ' + ' [/map]';
             var mapBBcode = new MapBBCode({
                 windowPath: './mapbbcode/',
