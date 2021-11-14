@@ -123,8 +123,9 @@
                             <tr class="table-secondary">
                                 <th>Strecke</th>
                                 <th>Abschnitt</th>
-                                <th>Auslastungsstufe</th>
-                                <th>Max. Auslastung</th>   
+                                <th>Auslastungsstufe</th>                                
+                                <th>Anzahl Tage</th>   
+                                <th>Max. Auslastung</th>
                                 <th>Nennleistung unter Bau</th>
                                 <th>SPFV</th>
                                 <th>SPNV</th>
@@ -133,14 +134,15 @@
                             </tr>
                         </thead>
                         <tbody>
-                            <tr ng-repeat="tr in bbpList.TrackAnalysis | orderBy:['-MaxLoad', 'Strecke']">
+                            <tr ng-repeat="tr in bbpList.TrackAnalysis | orderBy:['-Level.Lv', '-Days', '-MaxLoad', 'Strecke']">
                                 <td>{{tr.Strecke}}</td>
                                 <td>{{tr.From}} - {{tr.To}}</td>
                                 <td ng-style="{'background-color': tr.Level.Col, 'color': 'white'}"><b>Stufe {{tr.Level.Lv}}</b></td>
+                                <td>{{tr.Days}}</td>
                                 <td>
                                     <span class="animate-show-hide ng-show" ng-hide="tr.MaxLoad===999999">{{tr.MaxLoad}} %</span>
                                     <span class="animate-show-hide ng-show" ng-show="tr.MaxLoad===999999">Totalsperrung</span>
-                                </td>
+                                </td>                                
                                 <td>{{tr.Nennleistung}}</td>
                                 <td>{{tr.SPFV}}</td>
                                 <td>{{tr.SPNV}}</td>
@@ -166,7 +168,8 @@
                                 <th>Datum</th>
                                 <th>Abschnitt</th>
                                 <th>Auslastungsstufe</th>
-                                <th>Max. Auslastung</th>   
+                                <th>Anzahl Abschnitte</th> 
+                                <th>Max. Auslastung</th>                                  
                                 <th>Nennleistung unter Bau</th>
                                 <th>SPFV</th>
                                 <th>SPNV</th>
@@ -179,10 +182,11 @@
                                 <td>{{tr.Date.DText}}</td>
                                 <td>{{tr.From}} - {{tr.To}}</td>
                                 <td ng-style="{'background-color': tr.Level.Col, 'color': 'white'}"><b>Stufe {{tr.Level.Lv}}</b></td>
+                                <td>{{tr.NumSec}}</td>
                                 <td>
                                     <span class="animate-show-hide ng-show" ng-hide="tr.MaxLoad===999999">{{tr.MaxLoad}} %</span>
                                     <span class="animate-show-hide ng-show" ng-show="tr.MaxLoad===999999">Totalsperrung</span>
-                                </td>
+                                </td>                                
                                 <td>{{tr.Nennleistung}}</td>
                                 <td>{{tr.SPFV}}</td>
                                 <td>{{tr.SPNV}}</td>

@@ -49,7 +49,11 @@
             for (let i = 0; i < trNumbers.length; i+=1) {
                 let list = constructionList.filter((c) => c.Streckennummer === trNumbers[i] && c.Verkehrsart === 'Alle');
                 if(Math.min(...list.map((c) => c['Nennleistung unter Bau']))=== 0){
-                    let maxLoad = list.find((c) => c['Nennleistung unter Bau'] === 0);
+                    let maxLoad = list.filter((c) => c['Nennleistung unter Bau'] === 0);
+                    let days = maxLoad.map((c) => c.Datum.DNumber);
+                    days = days.filter((item, index) => days.indexOf(item)===index);
+                    days = days.length;
+                    maxLoad = maxLoad[0];
                     let spfv = constructionList.find((c) => c.Streckennummer === maxLoad.Streckennummer && 
                                          c['Von Betriebsstelle'] === maxLoad['Von Betriebsstelle'] &&
                                          c['Bis Betriebsstelle'] === maxLoad['Bis Betriebsstelle'] &&
@@ -66,6 +70,7 @@
                         'Strecke': maxLoad.Streckennummer,
                         'MaxLoad': maxLoad['Anzahl Züge Fahrplan']>0 ? 999999 : 0,
                         'Level': maxLoad['Anzahl Züge Fahrplan']>0 ? {'Lv': 6, 'Col': "#B20000"} : {'Lv': 1, 'Col': "#0087B9"},
+                        'Days': days,
                         'From': maxLoad['Von Betriebsstelle'],
                         'To': maxLoad['Bis Betriebsstelle'],
                         'Nennleistung': maxLoad['Nennleistung unter Bau'],
@@ -75,7 +80,11 @@
                     });
                 }else{
                     let maxLoad = Math.max.apply(null, list.map((c) => c['Auslastung Fahrplan unter Bau']));
-                    maxLoad = list.find((c) => c['Auslastung Fahrplan unter Bau'] === maxLoad);                    
+                    let threshold = getTresholdLevel(maxLoad);                    
+                    let days = list.filter((c) => c['Auslastung Fahrplan unter Bau'] >= threshold);                     
+                    days = days.map((c) => c.Datum.DNumber); 
+                    days = days.filter((item, index) => days.indexOf(item)===index).length; 
+                    maxLoad = list.find((c) => c['Auslastung Fahrplan unter Bau'] === maxLoad);                   
                     let spfv = constructionList.find((c) => c.Streckennummer === maxLoad.Streckennummer && 
                                          c['Von Betriebsstelle'] === maxLoad['Von Betriebsstelle'] &&
                                          c['Bis Betriebsstelle'] === maxLoad['Bis Betriebsstelle'] &&
@@ -92,6 +101,7 @@
                         'Strecke': maxLoad.Streckennummer,
                         'MaxLoad': Math.round(100.0*maxLoad['Auslastung Fahrplan unter Bau']),
                         'Level': getLevel(maxLoad['Auslastung Fahrplan unter Bau']),
+                        'Days': days,
                         'From': maxLoad['Von Betriebsstelle'],
                         'To': maxLoad['Bis Betriebsstelle'],
                         'Nennleistung': maxLoad['Nennleistung unter Bau'],
@@ -117,7 +127,11 @@
             for (let i = 0; i < days.length; i+=1) {
                 let list = trackList.filter((c) => c.Datum.DNumber === days[i] && c.Verkehrsart === 'Alle');
                 if(Math.min(...list.map((c) => c['Nennleistung unter Bau']))=== 0){
-                    let maxLoad = list.find((c) => c['Nennleistung unter Bau'] === 0);
+                    let maxLoad = list.filter((c) => c['Nennleistung unter Bau'] === 0);
+                    let sections = maxLoad.map((c) => c['Von Betriebsstelle']);
+                    sections = sections.filter((item, index) => sections.indexOf(item)===index);
+                    sections = sections.length;
+                    maxLoad = maxLoad[0];
                     let spfv = trackList.find((c) => c['Von Betriebsstelle'] === maxLoad['Von Betriebsstelle'] &&
                                          c['Bis Betriebsstelle'] === maxLoad['Bis Betriebsstelle'] &&
                                          c.Datum.DNumber === maxLoad.Datum.DNumber && c.Verkehrsart === 'SPFV');
@@ -131,6 +145,7 @@
                     bbpList.LoadAnalysis.push({
                         'Date': maxLoad.Datum,
                         'MaxLoad': maxLoad['Anzahl Züge Fahrplan']>0 ? 999999 : 0,
+                        'NumSec': sections,
                         'Level': maxLoad['Anzahl Züge Fahrplan']>0 ? {'Lv': 6, 'Col': "#B20000"} : {'Lv': 1, 'Col': "#0087B9"},
                         'From': maxLoad['Von Betriebsstelle'],
                         'To': maxLoad['Bis Betriebsstelle'],
@@ -141,7 +156,11 @@
                     });
                 }else{
                     let maxLoad = Math.max.apply(null, list.map((c) => c['Auslastung Fahrplan unter Bau']));
-                    maxLoad = list.find((c) => c['Auslastung Fahrplan unter Bau'] === maxLoad);                    
+                    let threshold = getTresholdLevel(maxLoad);
+                    let sections = list.filter((c) => c['Auslastung Fahrplan unter Bau'] >= threshold); 
+                    sections = sections.map((c) => c['Von Betriebsstelle']);
+                    sections = sections.filter((item, index) => sections.indexOf(item)===index).length;
+                    maxLoad = list.find((c) => c['Auslastung Fahrplan unter Bau'] === maxLoad);                   
                     let spfv = trackList.find((c) => c['Von Betriebsstelle'] === maxLoad['Von Betriebsstelle'] &&
                                          c['Bis Betriebsstelle'] === maxLoad['Bis Betriebsstelle'] &&
                                          c.Datum.DNumber === maxLoad.Datum.DNumber && c.Verkehrsart === 'SPFV');
@@ -155,6 +174,7 @@
                     bbpList.LoadAnalysis.push({
                         'Date': maxLoad.Datum,
                         'MaxLoad': Math.round(100.0*maxLoad['Auslastung Fahrplan unter Bau']),
+                        'NumSec': sections,
                         'Level': getLevel(maxLoad['Auslastung Fahrplan unter Bau']),
                         'From': maxLoad['Von Betriebsstelle'],
                         'To': maxLoad['Bis Betriebsstelle'],
@@ -457,6 +477,15 @@
             if(load < 1.25){return {'Lv': 4, 'Col': "#FF5A64"};}
             if(load < 1.4){return {'Lv': 5, 'Col': "#F01414"};}
             if(load >= 1.4){return {'Lv': 6, 'Col': "#B20000"};}
+        };
+
+        function getTresholdLevel(load){
+            if(load < 0.8){return 0.0;}
+            if(load < 1.08){return 0.8;}
+            if(load < 1.15){return 1.08;}
+            if(load < 1.25){return 1.15;}
+            if(load < 1.4){return 1.25;}
+            if(load >= 1.4){return 1.4;}
         };
 
         $(document).ready(function () {
