@@ -238,26 +238,67 @@
             let start = trackList.map((c) => c['Von Betriebsstelle']);
             let end = trackList.map((c) => c['Bis Betriebsstelle']);
             let firstBts = start.filter((x) => !end.includes(x))[0];
+            let mergedBTS = start.concat(end); 
+            mergedBTS = mergedBTS.filter((item, index) => mergedBTS.indexOf(item) === index);
+            let linkedTracks = bbpList.CapaList.filter((c) => c.Streckennummer !== track && c.Verkehrsart === 'Alle' && c.Datum.DNumber === date &&
+                                                              (mergedBTS.includes(c['Von Betriebsstelle']) || mergedBTS.includes(c['Bis Betriebsstelle'])));
+            
             for (let i = 0; i < trackList.length; i+=1) {
                 const element = trackList.find((c) => c['Von Betriebsstelle'] === firstBts);
+                let link = '';
+                if(linkedTracks.find((c) => c['Von Betriebsstelle'] === element['Bis Betriebsstelle'] || 
+                                            c['Bis Betriebsstelle'] === element['Bis Betriebsstelle']) !== undefined){
+                    link = linkedTracks.filter((c) => c['Von Betriebsstelle'] === element['Bis Betriebsstelle'] || 
+                                                      c['Bis Betriebsstelle'] === element['Bis Betriebsstelle']).map((c) => c.Streckennummer);
+                    link = link.filter((item, index) => link.indexOf(item) === index).sort();
+                }
                 firstBts = element['Bis Betriebsstelle'];
                 if(element['Nennleistung unter Bau'] === 0){
                     bbpList.selectedRoute.push({
                         'id': i,
                         'section': element,
+                        'von': element['Von Betriebsstelle'],
+                        'bis': element['Bis Betriebsstelle'],
                         'level': element['Anzahl Züge Fahrplan']>0 ? {'Lv': 6, 'Col': "#B20000"} : {'Lv': 1, 'Col': "#0087B9"},
-                        'MaxLoad': element['Anzahl Züge Fahrplan']>0 ? 999999 : 0 
+                        'MaxLoad': element['Anzahl Züge Fahrplan']>0 ? 999999 : 0,
+                        'Link': link 
                     });
                 }else{
                     bbpList.selectedRoute.push({
                         'id': i,
-                        'section': element,
+                        'section': element,                        
+                        'von': element['Von Betriebsstelle'],
+                        'bis': element['Bis Betriebsstelle'],
                         'level': getLevel(element['Auslastung Fahrplan unter Bau']),
-                        'MaxLoad': Math.round(100.0*element['Auslastung Fahrplan unter Bau'])
+                        'MaxLoad': Math.round(100.0*element['Auslastung Fahrplan unter Bau']),
+                        'Link': link
                     });
                     
                 }
                 
+            }
+        };
+
+        bbpList.reverseSection = function(){
+            bbpList.fromBTS = {'id': -1, 'bts': ''};
+            bbpList.toBTS = {'id': -1, 'bts': ''};
+            let mergedBTS = bbpList.selectedRoute.map((c) => c.von).concat(bbpList.selectedRoute.map((c) => c.bis)); 
+            mergedBTS = mergedBTS.filter((item, index) => mergedBTS.indexOf(item) === index);
+            let linkedTracks = bbpList.CapaList.filter((c) => c.Streckennummer !== bbpList.selectTrack && c.Verkehrsart === 'Alle' && c.Datum.DNumber === bbpList.EditRow.Date.DNumber &&
+                                                              (mergedBTS.includes(c['Von Betriebsstelle']) || mergedBTS.includes(c['Bis Betriebsstelle'])));
+            for (let i = 0; i < bbpList.selectedRoute.length; i+=1) {
+                bbpList.selectedRoute[i].id = -1*bbpList.selectedRoute[i].id;
+                let temp = bbpList.selectedRoute[i].von;
+                bbpList.selectedRoute[i].von = bbpList.selectedRoute[i].bis;
+                bbpList.selectedRoute[i].bis = temp;
+                let link = '';
+                if(linkedTracks.find((c) => c['Von Betriebsstelle'] === bbpList.selectedRoute[i].bis || 
+                                            c['Bis Betriebsstelle'] === bbpList.selectedRoute[i].bis) !== undefined){
+                    link = linkedTracks.filter((c) => c['Von Betriebsstelle'] === bbpList.selectedRoute[i].bis || 
+                                                      c['Bis Betriebsstelle'] === bbpList.selectedRoute[i].bis).map((c) => c.Streckennummer);
+                    link = link.filter((item, index) => link.indexOf(item) === index).sort();
+                }
+                bbpList.selectedRoute[i].Link = link;
             }
         };
 
@@ -448,27 +489,19 @@
 
         bbpList.setStart = function(id){
             bbpList.fromBTS = {
-                'id': id,
-                'bts': bbpList.selectedRoute.find((c) => c.id === id).section['Von Betriebsstelle']
+                'id': id<0? -1*id: id,
+                'bts': bbpList.selectedRoute.find((c) => c.id === id).von
             };
-            switchBTS();            
+            //console.log(bbpList.fromBTS);           
         };
 
         bbpList.setEnd = function(id){
             bbpList.toBTS = {
-                'id': id,
-                'bts': bbpList.selectedRoute.find((c) => c.id === id).section['Bis Betriebsstelle']
+                'id': id<0? -1*id: id,
+                'bts': bbpList.selectedRoute.find((c) => c.id === id).bis
             };
-            switchBTS();             
-        };
-
-        function switchBTS(){
-            if(bbpList.fromBTS.id === -1 || bbpList.toBTS.id === -1){return;}
-            if(bbpList.fromBTS.id > bbpList.toBTS.id){
-                bbpList.fromBTS.bts = bbpList.selectedRoute.find((c) => c.id === bbpList.fromBTS.id).section['Bis Betriebsstelle'];
-                bbpList.toBTS.bts = bbpList.selectedRoute.find((c) => c.id === bbpList.toBTS.id).section['Von Betriebsstelle'];
-            }
-        };
+            //console.log(bbpList.toBTS);            
+        };        
 
         function getLevel(load){
             if(load < 0.8){return {'Lv': 1, 'Col': "#0087B9"};}
