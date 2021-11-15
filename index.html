@@ -499,7 +499,6 @@
                                 <thead>
                                   <tr>
                                     <th>Strecke</th>
-                                    <th>ID</th>
                                     <th>Abschnitt</th>
                                     <th>Stufe</th>
                                     <th>Auslastung</th>
@@ -509,7 +508,6 @@
                                 <tbody>
                                   <tr ng-repeat="e in bbpList.selectedRoute | orderBy:['id']">
                                     <td>{{e.section.Streckennummer}}</td>
-                                    <td>{{e.id}}</td>
                                     <td>
                                       {{e.von}} - {{e.bis}}
                                       <span class="animate-show-hide ng-show" ng-hide="e.Link===''" title="{{e.Link.join(', ')}}">
