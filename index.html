@@ -112,7 +112,8 @@
                 <button class="nav-link active text-danger" id="nav-home-tab" data-bs-toggle="tab" data-bs-target="#nav-home" type="button" role="tab" aria-controls="nav-home" aria-selected="true">Streckenanalyse</button>
                 <button class="nav-link text-danger" id="nav-profile-tab" data-bs-toggle="tab" data-bs-target="#nav-profile" type="button" role="tab" aria-controls="nav-profile" aria-selected="false">Details Auslastung</button>
                 <button class="nav-link text-danger" id="nav-mfb-tab" data-bs-toggle="tab" data-bs-target="#nav-mfb" type="button" role="tab" aria-controls="nav-mfb" aria-selected="false">Umleitungen bearbeiten</button>
-                <button class="nav-link text-light" id="nav-edit-tab" data-bs-toggle="tab" data-bs-target="#nav-edit" type="button" role="tab" aria-controls="nav-edit" aria-selected="false">&nbsp;</button>
+                <button class="nav-link text-light" id="nav-saved-tab" data-bs-toggle="tab" data-bs-target="#nav-saved" type="button" role="tab" aria-controls="nav-saved" aria-selected="false">Routen</button>
+                <button class="nav-link text-light" id="nav-edit-tab" data-bs-toggle="tab" data-bs-target="#nav-edit" type="button" role="tab" aria-controls="nav-edit" aria-selected="false">Log</button>
               </div>
             </nav>
             <div class="tab-content" id="nav-tabContent">              
@@ -483,8 +484,9 @@
                                   <tr>
                                     <td>
                                       <div class="animate-show-hide ng-show" ng-hide="bbpList.newRoute.length === 0">
+                                        <button type="button" ng-click="bbpList.saveRoute();" class="btn btn-outline-secondary"><i class="far fa-save"></i></button>
                                         <button type="button" ng-click="bbpList.deleteNewRoute();" class="btn btn-outline-danger"><i class="fas fa-trash"></i> Abschnitt löschen</button>
-                                        <button type="button" ng-click="" class="btn btn-outline-success animate-show-hide ng-show" ng-hide="(bbpList.newSPFV + bbpList.newSPNV + bbpList.newSGV) < 1"><i class="far fa-thumbs-up"></i> Umleitung anwenden</button>
+                                        <button type="button" ng-click="bbpList.applyRouting();" class="btn btn-outline-success animate-show-hide ng-show" ng-hide="(bbpList.newSPFV + bbpList.newSPNV + bbpList.newSGV) < 1"><i class="far fa-thumbs-up"></i> Umleitung anwenden</button>
                                       </div> 
                                     </td>
                                   </tr>
@@ -584,8 +586,57 @@
                           </tr>
                         </tbody>
                       </table>                
+              </div> 
+            </div>
+
+            <div class="tab-pane fade" id="nav-saved" role="tabpanel" aria-labelledby="nav-saved-tab">
+              <div class="col-md-8">
+                <h4>Gespeicherte Routen</h4>
+                <table class="table table-hover table-secondary">
+                  <thead>
+                    <tr>
+                      <th>von</th>
+                      <th>nach</th>
+                      <th>via</th>
+                      <th>Anzahl Abschnitte</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    <tr ng-repeat="r in bbpList.savedRoutes">
+                      <td>{{r.startTrack}} / {{r.from}}</td>
+                      <td>{{r.endTrack}} / {{r.to}}</td>
+                      <td>{{r.way}}</td>
+                      <td>{{r.idList.length}}</td>
+                    </tr>
+                  </tbody>
+                </table>
               </div>
             </div>
+
+            <div class="tab-pane fade" id="nav-edit" role="tabpanel" aria-labelledby="nav-edit-tab">
+              <div class="col-md-8">
+                <h4>Festgelegte Umleitungen und Teilausfälle</h4>
+                <table class="table table-hover table-secondary">
+                  <thead>
+                    <tr>
+                      <th>von</th>
+                      <th>Menge</th>
+                      <th>nach</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    <tr ng-repeat="r in bbpList.appliedRouting">
+                      <td>{{r.old.way}}</td>
+                      <td>
+                        SPFV {{r.spfv}} / SPNV {{r.spnv}} / SGV {{r.sgv}}
+                      </td>
+                      <td>{{r.new.way}}</td>
+                    </tr>
+                  </tbody>
+                </table>
+              </div>
+            </div>
+
           </div>
 
         </div>

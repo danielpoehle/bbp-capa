@@ -39,6 +39,8 @@
         bbpList.newSGV = 0;
         bbpList.maxReroute = 0;
         bbpList.minReduce = 0;
+        bbpList.savedRoutes = [];
+        bbpList.appliedRouting = [];
 
         bbpList.findOverload = function(){
             bbpList.TrackAnalysis = [];
@@ -114,7 +116,7 @@
             console.log(bbpList.TrackAnalysis[0]);
         };
 
-        bbpList.showDetails = function(track){
+        bbpList.showDetails = function(track, sw = true){
             bbpList.LoadAnalysis = [];
             bbpList.FromDate = '';
             bbpList.ToDate = '';
@@ -186,8 +188,11 @@
                 }
                 
             }
-            console.log(bbpList.LoadAnalysis[0]);
-            document.getElementById("nav-profile-tab").click();
+            if(sw){
+                console.log(bbpList.LoadAnalysis[0]);
+                document.getElementById("nav-profile-tab").click();
+            }
+            
         };
 
         bbpList.editRouting =function(track, row){
@@ -457,6 +462,69 @@
             }
         };
 
+        bbpList.applyRouting = function(){ 
+            let totalChange = bbpList.newSPFV + bbpList.newSPNV + bbpList.newSGV;
+            for (let i = 0; i < bbpList.oldRoute.length; i+=1) {
+                const element = bbpList.oldRoute[i].section;
+
+                let list = bbpList.CapaList.filter((c) => c.Streckennummer ===  element.Streckennummer && 
+                                         c['Von Betriebsstelle'] === element['Von Betriebsstelle'] &&
+                                         c['Bis Betriebsstelle'] === element['Bis Betriebsstelle'] &&
+                                         c.Datum.DNumber === element.Datum.DNumber);
+                if(bbpList.newSPFV > 0){
+                    list.find((c) => c.Verkehrsart === 'SPFV')['Anzahl Züge Fahrplan'] -= bbpList.newSPFV;
+                }
+                if(bbpList.newSPNV > 0){
+                    list.find((c) => c.Verkehrsart === 'SPNV')['Anzahl Züge Fahrplan'] -= bbpList.newSPNV;
+                }
+                if(bbpList.newSGV > 0){
+                    list.find((c) => c.Verkehrsart === 'SGV')['Anzahl Züge Fahrplan'] -= bbpList.newSGV;
+                }
+                let all = list.find((c) => c.Verkehrsart === 'Alle')
+                all['Anzahl Züge Fahrplan'] -= totalChange;
+                all['Auslastung Fahrplan unter Bau'] = Math.round((1.0 * all['Anzahl Züge Fahrplan'] / all['Nennleistung unter Bau'] + Number.EPSILON) * 100) / 100; 
+            }
+            
+            for (let i = 0; i < bbpList.newRoute.length; i+=1) {
+                const element = bbpList.newRoute[i].section;
+
+                let list = bbpList.CapaList.filter((c) => c.Streckennummer ===  element.Streckennummer && 
+                                         c['Von Betriebsstelle'] === element['Von Betriebsstelle'] &&
+                                         c['Bis Betriebsstelle'] === element['Bis Betriebsstelle'] &&
+                                         c.Datum.DNumber === element.Datum.DNumber);
+                if(bbpList.newSPFV > 0){
+                    list.find((c) => c.Verkehrsart === 'SPFV')['Anzahl Züge Fahrplan'] += bbpList.newSPFV;
+                }
+                if(bbpList.newSPNV > 0){
+                    list.find((c) => c.Verkehrsart === 'SPNV')['Anzahl Züge Fahrplan'] += bbpList.newSPNV;
+                }
+                if(bbpList.newSGV > 0){
+                    list.find((c) => c.Verkehrsart === 'SGV')['Anzahl Züge Fahrplan'] += bbpList.newSGV;
+                }
+                let all = list.find((c) => c.Verkehrsart === 'Alle')
+                all['Anzahl Züge Fahrplan'] += totalChange;
+                all['Auslastung Fahrplan unter Bau'] = Math.round((1.0 * all['Anzahl Züge Fahrplan'] / all['Nennleistung unter Bau'] + Number.EPSILON) * 100) / 100; 
+            
+                
+            }
+
+            bbpList.appliedRouting.push({
+                'old': createRouteObject(false),
+                'new': createRouteObject(),
+                'spfv': bbpList.newSPFV,
+                'spnv': bbpList.newSPNV,
+                'sgv': bbpList.newSGV
+            });
+
+            bbpList.showDetails(bbpList.showTrack, false);
+            bbpList.updateSelectedTrack(bbpList.showTrack, bbpList.EditRow.Date.DNumber);
+            bbpList.deleteOldRoute();
+        };
+
+        bbpList.saveRoute = function(){            
+            bbpList.savedRoutes.push(createRouteObject());
+        };
+
         bbpList.RerouteSPFV = function(amount){
             bbpList.remainSPFV -= amount;
             bbpList.newSPFV += amount;
@@ -501,7 +569,30 @@
                 'bts': bbpList.selectedRoute.find((c) => c.id === id).bis
             };
             //console.log(bbpList.toBTS);            
-        };        
+        };       
+        
+        function createRouteObject(routeNew = true){   
+            let route = routeNew? bbpList.newRoute: bbpList.oldRoute;      
+            let idList = [route[0].section.ID];
+            let wayString = route[0].fromBTS + ' - ' + route[0].strecke + ' - ';
+            for (let i = 0; i < (route.length-1); i+=1) {
+                idList.push(route[i+1].section.ID);
+                if(route[i].strecke !== route[i+1].strecke){
+                    let connection = [route[i].fromBTS, route[i].toBTS].filter(x => [route[i+1].fromBTS, route[i+1].toBTS].includes(x))[0];
+                    wayString += connection + ' - ' + route[i+1].strecke + ' - ';
+                }
+            }
+            let endBTS = route[route.length-1].toBTS;
+            wayString += endBTS;
+            return({
+                'from': route[0].fromBTS,
+                'startTrack': route[0].strecke,
+                'to': endBTS,
+                'endTrack': route[route.length-1].strecke,
+                'way': wayString,
+                'idList': idList
+            });
+        };
 
         function getLevel(load){
             if(load < 0.8){return {'Lv': 1, 'Col': "#0087B9"};}
@@ -541,9 +632,10 @@
                     for (let i = 0; i < result.length; i+= 1) {
                         const dt = result[i].Datum; 
                         result[i].Datum = {'DText': dt, 'DNumber': luxon.DateTime.fromFormat(dt, 'dd.MM.yyyy').ts};
+                        result[i].ID = result[i].Streckennummer + '#' + result[i]['Von Betriebsstelle'] + '#' + result[i]['Bis Betriebsstelle'];
+                        result[i]['Anzahl Züge Fahrplan'] = parseInt(result[i]['Anzahl Züge Fahrplan']);
                         if(result[i].Verkehrsart === 'Alle'){
-                            result[i]['Auslastung Fahrplan unter Bau'] = parseFloat(result[i]['Auslastung Fahrplan unter Bau'].replace(/,/g, '.'));
-                            result[i]['Anzahl Züge Fahrplan'] = parseInt(result[i]['Anzahl Züge Fahrplan']);
+                            result[i]['Auslastung Fahrplan unter Bau'] = parseFloat(result[i]['Auslastung Fahrplan unter Bau'].replace(/,/g, '.'));                            
                             result[i]['Nennleistung unter Bau'] = parseInt(result[i]['Nennleistung unter Bau']);
                         }                                                                   
                     }
