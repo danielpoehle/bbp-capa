@@ -511,6 +511,7 @@
                                   <tr ng-repeat="e in bbpList.selectedRoute | orderBy:['id']">
                                     <td>{{e.section.Streckennummer}}</td>
                                     <td>
+                                      <span class="animate-show-hide ng-show text-danger" ng-hide="e.section.Baustelle === '0'"><i class="fas fa-snowplow"></i></span>
                                       {{e.von}} - {{e.bis}}
                                       <span class="animate-show-hide ng-show" ng-hide="e.Link===''" title="{{e.Link.join(', ')}}">
                                         <i class="fas fa-map-signs"></i>
@@ -548,7 +549,10 @@
                                 <tbody>
                                   <tr ng-repeat="e in bbpList.oldRoute">
                                     <td>{{e.strecke}}</td>
-                                    <td>{{e.fromBTS}} - {{e.toBTS}}</td>
+                                    <td>
+                                      <span class="animate-show-hide ng-show text-danger" ng-hide="e.section.Baustelle === '0'"><i class="fas fa-snowplow"></i></span>
+                                      {{e.fromBTS}} - {{e.toBTS}}
+                                    </td>
                                     <td ng-style="{'background-color': e.level.Col, 'color': 'white'}"><b>Stufe {{e.level.Lv}}</b></td>
                                     <td>{{e.SPFV}}/{{e.SPNV}}/{{e.SGV}}</td>
                                   </tr>
@@ -571,7 +575,10 @@
                                   <tbody>
                                     <tr ng-repeat="e in bbpList.newRoute">
                                       <td>{{e.strecke}}</td>
-                                      <td>{{e.fromBTS}} - {{e.toBTS}}</td>
+                                      <td>
+                                        <span class="animate-show-hide ng-show text-danger" ng-hide="e.section.Baustelle === '0'"><i class="fas fa-snowplow"></i></span>
+                                        {{e.fromBTS}} - {{e.toBTS}}
+                                      </td>
                                       <td ng-style="{'background-color': e.level.Col, 'color': 'white'}"><b>Stufe {{e.level.Lv}}</b></td>
                                       <td>
                                         <span class="animate-show-hide ng-show" ng-hide="e.MaxLoad===999999">{{e.MaxLoad}} %</span>
