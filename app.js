@@ -391,7 +391,7 @@
                         'SPFV': spfv['Anzahl Züge Fahrplan'],
                         'SPNV': spnv['Anzahl Züge Fahrplan'],
                         'SGV': sgv['Anzahl Züge Fahrplan'],
-                        'ReductionToLv4': Math.ceil(element.section['Anzahl Züge Fahrplan'] - 1.25*element.section['Nennleistung unter Bau'])
+                        'ReductionToLv4': Math.ceil(element.section['Anzahl Züge Fahrplan'] - 1.24*element.section['Nennleistung unter Bau'])
                     });                    
                 }
                 //update traffic flows            
