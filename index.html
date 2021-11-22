@@ -188,7 +188,10 @@
                                     <span class="animate-show-hide ng-show" ng-hide="tr.MaxLoad===999999">{{tr.MaxLoad}} %</span>
                                     <span class="animate-show-hide ng-show" ng-show="tr.MaxLoad===999999">Totalsperrung</span>
                                 </td>                                
-                                <td>{{tr.Nennleistung}}</td>
+                                <td>
+                                  <span class="animate-show-hide ng-show text-danger" ng-show="tr.Bau"><i class="fas fa-snowplow"></i></span>
+                                  {{tr.Nennleistung}}
+                                </td>
                                 <td>{{tr.SPFV}}</td>
                                 <td>{{tr.SPNV}}</td>
                                 <td>{{tr.SGV}}</td>

@@ -154,7 +154,8 @@
                         'Nennleistung': maxLoad['Nennleistung unter Bau'],
                         'SPFV': spfv['Anzahl Züge Fahrplan'],
                         'SPNV': spnv['Anzahl Züge Fahrplan'],
-                        'SGV': sgv['Anzahl Züge Fahrplan']
+                        'SGV': sgv['Anzahl Züge Fahrplan'],
+                        'Bau': true
                     });
                 }else{
                     let maxLoad = Math.max.apply(null, list.map((c) => c['Auslastung Fahrplan unter Bau']));
@@ -173,6 +174,7 @@
                                          c['Bis Betriebsstelle'] === maxLoad['Bis Betriebsstelle'] &&
                                          c.Datum.DNumber === maxLoad.Datum.DNumber && c.Verkehrsart === 'SGV');
                     
+                    let bau = list.map((c) => c.Baustelle);                    
                     bbpList.LoadAnalysis.push({
                         'Date': maxLoad.Datum,
                         'MaxLoad': Math.round(100.0*maxLoad['Auslastung Fahrplan unter Bau']),
@@ -183,7 +185,8 @@
                         'Nennleistung': maxLoad['Nennleistung unter Bau'],
                         'SPFV': spfv['Anzahl Züge Fahrplan'],
                         'SPNV': spnv['Anzahl Züge Fahrplan'],
-                        'SGV': sgv['Anzahl Züge Fahrplan']
+                        'SGV': sgv['Anzahl Züge Fahrplan'],
+                        'Bau': bau.some((c) => c !== '0')
                     });
                 }
                 
