@@ -41,6 +41,14 @@
         bbpList.minReduce = 0;
         bbpList.savedRoutes = [];
         bbpList.appliedRouting = [];
+        bbpList.activityList = [];
+        bbpList.activityTrack = '';
+        bbpList.activityStart = '';
+        bbpList.activityStartTime = 0;
+        bbpList.activityEnd = '';
+        bbpList.activityEndTime = 24;
+        bbpList.allDays = [];
+        bbpList.activityNr = '';
 
         bbpList.findOverload = function(){
             bbpList.TrackAnalysis = [];
@@ -114,6 +122,19 @@
                 }
             }
             console.log(bbpList.TrackAnalysis[0]);
+            let allDays = bbpList.CapaList.filter((c) => c['Von Betriebsstelle'] === bbpList.TrackAnalysis[0].From &&
+                                                         c['Bis Betriebsstelle'] === bbpList.TrackAnalysis[0].To &&
+                                                         c.Streckennummer === bbpList.TrackAnalysis[0].Strecke &&
+                                                         c.Verkehrsart === 'Alle').map((c) => c.Datum.DNumber);
+            allDays = allDays.filter((item, index) => allDays.indexOf(item)===index).sort();
+            for (let index = 0; index < allDays.length; index+= 1) {
+                bbpList.allDays.push({
+                    'DNumber': allDays[index],
+                    'DText': bbpList.CapaList.find((c) => c.Datum.DNumber === allDays[index]).Datum.DText
+                });                
+            }
+            bbpList.activityStart = bbpList.CapaList.find((c) => c.Datum.DNumber === allDays[0]).Datum.DText;
+            bbpList.activityEnd = bbpList.activityStart;
         };
 
         bbpList.showDetails = function(track, sw = true){
@@ -214,7 +235,7 @@
             bbpList.newSGV = 0;
             bbpList.maxReroute = 0;
             bbpList.minReduce = 0;
-            bbpList.updateSelectedTrack(track, row.Date.DNumber);
+            bbpList.updateSelectedTrack(track, row.Date.DText);
 
             bbpList.redLv3 = Math.ceil((row.MaxLoad/100.0 - 1.15)*row.Nennleistung);
             bbpList.redLv4 = Math.ceil((row.MaxLoad/100.0 - 1.25)*row.Nennleistung);            
@@ -237,18 +258,18 @@
             document.getElementById("nav-mfb-tab").click();
         };
 
-        bbpList.updateSelectedTrack = function(track, date){
-            bbpList.selectTrack = track;
+        bbpList.updateSelectedTrack = function(track, date, forRerouting = true){
+            if(forRerouting){bbpList.selectTrack = track;}            
             bbpList.selectedRoute = [];
             bbpList.fromBTS = {'id': -1, 'bts': ''};
             bbpList.toBTS = {'id': -1, 'bts': ''};
-            let trackList = bbpList.CapaList.filter((c) => c.Streckennummer === track && c.Verkehrsart === 'Alle' && c.Datum.DNumber === date);
+            let trackList = bbpList.CapaList.filter((c) => c.Streckennummer === track && c.Verkehrsart === 'Alle' && c.Datum.DText === date);
             let start = trackList.map((c) => c['Von Betriebsstelle']);
             let end = trackList.map((c) => c['Bis Betriebsstelle']);
             let firstBts = start.filter((x) => !end.includes(x))[0];
             let mergedBTS = start.concat(end); 
             mergedBTS = mergedBTS.filter((item, index) => mergedBTS.indexOf(item) === index);
-            let linkedTracks = bbpList.CapaList.filter((c) => c.Streckennummer !== track && c.Verkehrsart === 'Alle' && c.Datum.DNumber === date &&
+            let linkedTracks = bbpList.CapaList.filter((c) => c.Streckennummer !== track && c.Verkehrsart === 'Alle' && c.Datum.DText === date &&
                                                               (mergedBTS.includes(c['Von Betriebsstelle']) || mergedBTS.includes(c['Bis Betriebsstelle'])));
             
             for (let i = 0; i < trackList.length; i+=1) {
@@ -261,6 +282,27 @@
                     link = link.filter((item, index) => link.indexOf(item) === index).sort();
                 }
                 firstBts = element['Bis Betriebsstelle'];
+
+                let spfv = {'Anzahl Züge Fahrplan': 0};
+                let spnv = {'Anzahl Züge Fahrplan': 0};
+                let sgv = {'Anzahl Züge Fahrplan': 0};
+
+                if(!forRerouting){
+                    spfv = bbpList.CapaList.find((c) => c.Streckennummer ===  element.Streckennummer && 
+                                         c['Von Betriebsstelle'] === element['Von Betriebsstelle'] &&
+                                         c['Bis Betriebsstelle'] === element['Bis Betriebsstelle'] &&
+                                         c.Datum.DNumber === element.Datum.DNumber && c.Verkehrsart === 'SPFV');
+                    spnv = bbpList.CapaList.find((c) => c.Streckennummer ===  element.Streckennummer && 
+                                         c['Von Betriebsstelle'] === element['Von Betriebsstelle'] &&
+                                         c['Bis Betriebsstelle'] === element['Bis Betriebsstelle'] &&
+                                         c.Datum.DNumber === element.Datum.DNumber && c.Verkehrsart === 'SPNV');
+                    sgv = bbpList.CapaList.find((c) => c.Streckennummer ===  element.Streckennummer && 
+                                         c['Von Betriebsstelle'] === element['Von Betriebsstelle'] &&
+                                         c['Bis Betriebsstelle'] === element['Bis Betriebsstelle'] &&
+                                         c.Datum.DNumber === element.Datum.DNumber && c.Verkehrsart === 'SGV');
+                }
+                
+
                 if(element['Nennleistung unter Bau'] === 0){
                     bbpList.selectedRoute.push({
                         'id': i,
@@ -269,7 +311,10 @@
                         'bis': element['Bis Betriebsstelle'],
                         'level': element['Anzahl Züge Fahrplan']>0 ? {'Lv': 6, 'Col': "#B20000"} : {'Lv': 1, 'Col': "#0087B9"},
                         'MaxLoad': element['Anzahl Züge Fahrplan']>0 ? 999999 : 0,
-                        'Link': link 
+                        'Link': link,                        
+                        'SPFV': spfv['Anzahl Züge Fahrplan'],
+                        'SPNV': spnv['Anzahl Züge Fahrplan'],
+                        'SGV': sgv['Anzahl Züge Fahrplan'] 
                     });
                 }else{
                     bbpList.selectedRoute.push({
@@ -279,7 +324,10 @@
                         'bis': element['Bis Betriebsstelle'],
                         'level': getLevel(element['Auslastung Fahrplan unter Bau']),
                         'MaxLoad': Math.round(100.0*element['Auslastung Fahrplan unter Bau']),
-                        'Link': link
+                        'Link': link,
+                        'SPFV': spfv['Anzahl Züge Fahrplan'],
+                        'SPNV': spnv['Anzahl Züge Fahrplan'],
+                        'SGV': sgv['Anzahl Züge Fahrplan']
                     });
                     
                 }
@@ -287,12 +335,12 @@
             }
         };
 
-        bbpList.reverseSection = function(){
+        bbpList.reverseSection = function(track = bbpList.selectTrack, day = bbpList.EditRow.Date.DText){
             bbpList.fromBTS = {'id': -1, 'bts': ''};
             bbpList.toBTS = {'id': -1, 'bts': ''};
             let mergedBTS = bbpList.selectedRoute.map((c) => c.von).concat(bbpList.selectedRoute.map((c) => c.bis)); 
             mergedBTS = mergedBTS.filter((item, index) => mergedBTS.indexOf(item) === index);
-            let linkedTracks = bbpList.CapaList.filter((c) => c.Streckennummer !== bbpList.selectTrack && c.Verkehrsart === 'Alle' && c.Datum.DNumber === bbpList.EditRow.Date.DNumber &&
+            let linkedTracks = bbpList.CapaList.filter((c) => c.Streckennummer !== track && c.Verkehrsart === 'Alle' && c.Datum.DText === day &&
                                                               (mergedBTS.includes(c['Von Betriebsstelle']) || mergedBTS.includes(c['Bis Betriebsstelle'])));
             for (let i = 0; i < bbpList.selectedRoute.length; i+=1) {
                 bbpList.selectedRoute[i].id = -1*bbpList.selectedRoute[i].id;
@@ -310,12 +358,12 @@
             }
         };
 
-        bbpList.addSection = function(){
+        bbpList.addSection = function(activity = false){
             if(bbpList.fromBTS.id === -1 || bbpList.toBTS.id === -1){return;}
             if(bbpList.fromBTS.id <= bbpList.toBTS.id){
-                generateNormalOrder();
+                generateNormalOrder(activity);
             }else{
-                generateReversedOrder();
+                generateReversedOrder(activity);
             }            
             //reset selected BTS
             bbpList.fromBTS = {'id': -1, 'bts': ''};
@@ -351,14 +399,14 @@
             bbpList.maxReroute = 0;
         };
 
-        function generateNormalOrder(){
-            if(bbpList.toNewRoute){
+        function generateNormalOrder(activity){
+            if(bbpList.toNewRoute || activity){
                 for (let i = bbpList.fromBTS.id; i <= bbpList.toBTS.id; i+=1) {
                     const element = bbpList.selectedRoute[i];                     
 
                     bbpList.newRoute.push({                        
                         'section': element.section,
-                        'strecke': bbpList.selectTrack,
+                        'strecke': activity? bbpList.activityTrack : bbpList.selectTrack,
                         'fromBTS': element.section['Von Betriebsstelle'],
                         'toBTS': element.section['Bis Betriebsstelle'],
                         'MaxLoad': element.MaxLoad,
@@ -408,14 +456,14 @@
             }
         };
 
-        function generateReversedOrder(){
-            if(bbpList.toNewRoute){
+        function generateReversedOrder(activity){
+            if(bbpList.toNewRoute || activity){
                 for (let i = bbpList.fromBTS.id; i >= bbpList.toBTS.id; i-=1) {
                     const element = bbpList.selectedRoute[i];                     
 
                     bbpList.newRoute.push({                        
                         'section': element.section,
-                        'strecke': bbpList.selectTrack,
+                        'strecke': activity? bbpList.activityTrack : bbpList.selectTrack,
                         'fromBTS': element.section['Bis Betriebsstelle'],
                         'toBTS': element.section['Von Betriebsstelle'],
                         'MaxLoad': element.MaxLoad,
@@ -520,7 +568,7 @@
             });
 
             bbpList.showDetails(bbpList.showTrack, false);
-            bbpList.updateSelectedTrack(bbpList.showTrack, bbpList.EditRow.Date.DNumber);
+            bbpList.updateSelectedTrack(bbpList.showTrack, bbpList.EditRow.Date.DText);
             bbpList.deleteOldRoute();
         };
 
@@ -572,10 +620,22 @@
                 'bts': bbpList.selectedRoute.find((c) => c.id === id).bis
             };
             //console.log(bbpList.toBTS);            
-        };       
+        };    
+        
+        bbpList.getActivityRoute = function(){
+            return (createRouteObject());
+        };
         
         function createRouteObject(routeNew = true){   
-            let route = routeNew? bbpList.newRoute: bbpList.oldRoute;      
+            let route = routeNew? bbpList.newRoute: bbpList.oldRoute;
+            if(route.length < 1){return({
+                'from': '',
+                'startTrack': '',
+                'to': '',
+                'endTrack': '',
+                'way': '',
+                'idList': ''
+            });}      
             let idList = [route[0].section.ID];
             let wayString = route[0].fromBTS + ' - ' + route[0].strecke + ' - ';
             for (let i = 0; i < (route.length-1); i+=1) {
