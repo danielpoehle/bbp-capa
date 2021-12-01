@@ -112,6 +112,7 @@
                 <button class="nav-link active text-danger" id="nav-home-tab" data-bs-toggle="tab" data-bs-target="#nav-home" type="button" role="tab" aria-controls="nav-home" aria-selected="true">Streckenanalyse</button>
                 <button class="nav-link text-danger" id="nav-profile-tab" data-bs-toggle="tab" data-bs-target="#nav-profile" type="button" role="tab" aria-controls="nav-profile" aria-selected="false">Details Auslastung</button>
                 <button class="nav-link text-danger" id="nav-mfb-tab" data-bs-toggle="tab" data-bs-target="#nav-mfb" type="button" role="tab" aria-controls="nav-mfb" aria-selected="false">Umleitungen bearbeiten</button>
+                <button class="nav-link text-danger" id="nav-red-tab" data-bs-toggle="tab" data-bs-target="#nav-red" type="button" role="tab" aria-controls="nav-red" aria-selected="false">Vorgang anlegen</button>
                 <button class="nav-link text-light" id="nav-saved-tab" data-bs-toggle="tab" data-bs-target="#nav-saved" type="button" role="tab" aria-controls="nav-saved" aria-selected="false">Routen</button>
                 <button class="nav-link text-light" id="nav-edit-tab" data-bs-toggle="tab" data-bs-target="#nav-edit" type="button" role="tab" aria-controls="nav-edit" aria-selected="false">Log</button>
               </div>
@@ -278,7 +279,7 @@
                                     <div class="input-group mb-3">
                                       <span class="input-group-text" id="track">Strecke</span>
                                       <input type="text" class="form-control" placeholder="Strecke" aria-label="Strecke" aria-describedby="track" ng-model="bbpList.selectTrack">
-                                      <button type="button btn-sm" ng-click="bbpList.updateSelectedTrack(bbpList.selectTrack, bbpList.EditRow.Date.DNumber);" class="btn btn-outline-secondary"><i class="fas fa-sync-alt"></i> Strecke laden</button>
+                                      <button type="button btn-sm" ng-click="bbpList.updateSelectedTrack(bbpList.selectTrack, bbpList.EditRow.Date.DText);" class="btn btn-outline-secondary"><i class="fas fa-sync-alt"></i> Strecke laden</button>
                                     </div>
                                     <div class="input-group mb-3">
                                       <input type="text" class="form-control" placeholder="von" aria-label="von" ng-model="bbpList.fromBTS.bts">
@@ -597,6 +598,233 @@
                         </tbody>
                       </table>                
               </div> 
+            </div>
+
+            <div class="tab-pane fade" id="nav-red" role="tabpanel" aria-labelledby="nav-red-tab">
+              <div class="row">
+                <div class="col-md-5">
+                  <h5>Festlegung Streckenabschnitt</h5>
+                  <div>
+                    <div class="input-group mb-3">
+                      <span class="input-group-text" id="track">Strecke</span>
+                      <input type="text" class="form-control" placeholder="Strecke" aria-label="Strecke" aria-describedby="track" ng-model="bbpList.activityTrack">
+                      <span class="input-group-text" id="begin">Beginn Einschränkung</span>
+                      <input type="text" class="form-control" placeholder="Beginn" aria-label="Beginn Einschränkung" aria-describedby="begin" ng-model="bbpList.activityStart">
+                      <button type="button btn-sm" ng-click="bbpList.updateSelectedTrack(bbpList.activityTrack, bbpList.activityStart, false);" class="btn btn-outline-secondary"><i class="fas fa-sync-alt"></i> Strecke laden</button>
+                    </div>
+                    <div class="input-group mb-3">
+                      <input type="text" class="form-control" placeholder="von" aria-label="von" ng-model="bbpList.fromBTS.bts">
+                      <span class="input-group-text"><i class="fas fa-arrow-alt-circle-right"></i></span>
+                      <input type="text" class="form-control" placeholder="nach" aria-label="nach" ng-model="bbpList.toBTS.bts">
+                    </div> 
+                    <div class="row">
+                      <div class="col-md-12 text-end">
+                        <button type="button" ng-click="bbpList.reverseSection(bbpList.activityTrack, bbpList.activityStart);" class="btn btn-outline-secondary"><i class="fas fa-retweet"></i> Abschnitt drehen</button>
+                        <button type="button" ng-click="bbpList.addSection(true);" class="btn btn-secondary">
+                          <i class="fas fa-puzzle-piece"></i> 
+                          Abschnitt festlegen
+                        </button>
+                      </div>
+                    </div>  
+                    <div>
+                      <table class="table table-hover table-sm text-center">
+                        <thead>
+                          <tr>
+                            <th>Strecke</th>
+                            <th>Abschnitt</th>
+                            <th>Stufe</th>
+                            <th>Auslastung</th>
+                            <th>Fv/Nv/Gv</th>
+                            <th>&nbsp;</th>
+                          </tr>
+                        </thead>
+                        <tbody>
+                          <tr ng-repeat="e in bbpList.selectedRoute | orderBy:['id']">
+                            <td>{{e.section.Streckennummer}}</td>
+                            <td>
+                              <span class="animate-show-hide ng-show text-danger" ng-hide="e.section.Baustelle === '0'"><i class="fas fa-snowplow"></i></span>
+                              {{e.von}} - {{e.bis}}
+                              <span class="animate-show-hide ng-show" ng-hide="e.Link===''" title="{{e.Link.join(', ')}}">
+                                <i class="fas fa-map-signs"></i>
+                              </span>
+                            </td>
+                            <td ng-style="{'background-color': e.level.Col, 'color': 'white'}"><b>Stufe {{e.level.Lv}}</b></td>
+                            <td>
+                              <span class="animate-show-hide ng-show" ng-hide="e.MaxLoad===999999">{{e.MaxLoad}} %</span>
+                              <span class="animate-show-hide ng-show" ng-show="e.MaxLoad===999999">Totalsperrung</span>
+                            </td>
+                            <td>{{e.SPFV}}/{{e.SPNV}}/{{e.SGV}}</td>
+                            <td>
+                              <button type="button btn-sm" ng-click="bbpList.setStart(e.id);" class="btn btn-outline-secondary pt-0 pb-0">
+                                <small>S</small>
+                              </button>
+                              <button type="button btn-sm" ng-click="bbpList.setEnd(e.id);" class="btn btn-outline-secondary pt-0 pb-0">
+                                <small>E</small>
+                              </button>
+                            </td>
+                          </tr>
+                        </tbody>
+                      </table>                              
+                    </div>                                                                                                  
+                  </div>
+                </div>
+                <div class="col-md-6">
+                  <h5>Festlegung Einschränkung und Zeitraum</h5>
+                  <div class="animate-show-hide ng-show" ng-hide="bbpList.newRoute.length === 0">
+                    <table class="table">
+                      <thead class="table-secondary">
+                        <tr>
+                          <th>&nbsp;</th>
+                          <th>Details der neuen Einschränkung</th>                          
+                        </tr>
+                      </thead>
+                      <tbody>
+                        <tr>
+                          <td>Vorgang</td>
+                          <td>
+                            <div class="input-group mb-3">
+                              <span class="input-group-text" id="start">ID</span>
+                              <input type="text" class="form-control" placeholder="z.B. 50001" aria-label="Startdatum" aria-describedby="start" ng-model="bbpList.activityNr">
+                            </div>
+                          </td>
+                        </tr>
+                        <tr>
+                          <td>Abschnitt</td>
+                          <td><b>{{bbpList.getActivityRoute().way}}</b></td>
+                        </tr>
+                        <tr>
+                          <td>Beginn</td>
+                          <td>
+                            <div class="input-group mb-3">
+                              <span class="input-group-text" id="start">Datum</span>
+                              <input type="text" class="form-control" placeholder="Startdatum" aria-label="Startdatum" aria-describedby="start" ng-model="bbpList.activityStart">
+                              <span class="input-group-text">Zeit</span>
+                              <input type="text" class="form-control" aria-label="Startzeit" ng-model="bbpList.activityStartTime">
+                              <span class="input-group-text">Uhr</span>
+                            </div>
+                          </td>
+                        </tr>
+                        <tr>
+                          <td>Ende</td>
+                          <td>
+                            <div class="input-group mb-3">
+                              <span class="input-group-text" id="start">Datum</span>
+                              <input type="text" class="form-control" placeholder="Startdatum" aria-label="Startdatum" aria-describedby="start" ng-model="bbpList.activityEnd">
+                              <span class="input-group-text">Zeit</span>
+                              <input type="text" class="form-control" aria-label="Startzeit" ng-model="bbpList.activityEndTime">
+                              <span class="input-group-text">Uhr</span>
+                            </div>
+                          </td>
+                        </tr>
+                        <tr>
+                          <td>Festgelegte Regelung</td>
+                          <td>...</td>
+                        </tr>
+                        <tr class="table-dark">
+                          <td>Totalsperrung</td>
+                          <td>
+                            <button type="button" class="btn btn-outline-light btn-sm">
+                              <i class="fas fa-snowplow"></i>
+                            </button>
+                          </td>
+                        </tr>
+                        <tr class="table-dark">
+                          <td>  Streckensperrung</td>
+                          <td>
+                            <button type="button" class="btn btn-outline-light btn-sm">
+                              <i class="fas fa-snowplow"></i>
+                            </button>
+                          </td>
+                        </tr>
+                        <tr class="table-dark">
+                          <td>Gleiswechselbetrieb</td>
+                          <td>
+                            <button type="button" class="btn btn-outline-light btn-sm">
+                              0-7 km <i class="fas fa-snowplow"></i>
+                            </button>
+                            <button type="button" class="btn btn-outline-light btn-sm">
+                              7-12 km <i class="fas fa-snowplow"></i>
+                            </button>
+                            <button type="button" class="btn btn-outline-light btn-sm">
+                              12-... km <i class="fas fa-snowplow"></i>
+                            </button>
+                          </td>
+                        </tr>
+                        <tr class="table-dark">
+                          <td>Befahren Gegengleis auf Zs 8</td>
+                          <td>
+                            <button type="button" class="btn btn-outline-light btn-sm">
+                              0-7 km <i class="fas fa-snowplow"></i>
+                            </button>
+                            <button type="button" class="btn btn-outline-light btn-sm">
+                              7-12 km <i class="fas fa-snowplow"></i>
+                            </button>
+                            <button type="button" class="btn btn-outline-light btn-sm">
+                              12-... km <i class="fas fa-snowplow"></i>
+                            </button>
+                          </td>
+                        </tr>
+                        <tr class="table-dark">
+                          <td>Befahren Gegengleis auf Zs 1 + Zs6</td>
+                          <td>
+                            <button type="button" class="btn btn-outline-light btn-sm">
+                              0-7 km <i class="fas fa-snowplow"></i>
+                            </button>
+                            <button type="button" class="btn btn-outline-light btn-sm">
+                              7-12 km <i class="fas fa-snowplow"></i>
+                            </button>
+                            <button type="button" class="btn btn-outline-light btn-sm">
+                              12-... km <i class="fas fa-snowplow"></i>
+                            </button>
+                          </td>
+                        </tr>
+                        <tr class="table-dark">
+                          <td>Befahren Gegengleis auf Befehl</td>
+                          <td>
+                            <button type="button" class="btn btn-outline-light btn-sm">
+                              0-7 km <i class="fas fa-snowplow"></i>
+                            </button>
+                            <button type="button" class="btn btn-outline-light btn-sm">
+                              7-12 km <i class="fas fa-snowplow"></i>
+                            </button>
+                            <button type="button" class="btn btn-outline-light btn-sm">
+                              12-... km <i class="fas fa-snowplow"></i>
+                            </button>
+                          </td>
+                        </tr>
+                        <tr class="table-dark">
+                          <td>Befahren Gegengleis bei 2 eingl Str</td>
+                          <td>
+                            <button type="button" class="btn btn-outline-light btn-sm">
+                              0-7 km <i class="fas fa-snowplow"></i>
+                            </button>
+                            <button type="button" class="btn btn-outline-light btn-sm">
+                              7-12 km <i class="fas fa-snowplow"></i>
+                            </button>
+                            <button type="button" class="btn btn-outline-light btn-sm">
+                              12-... km <i class="fas fa-snowplow"></i>
+                            </button>
+                          </td>
+                        </tr>
+                        <tr class="table-dark">
+                          <td>ESP mit Richtungsbetrieb</td>
+                          <td>
+                            <button type="button" class="btn btn-outline-light btn-sm">
+                              0-7 km <i class="fas fa-snowplow"></i>
+                            </button>
+                            <button type="button" class="btn btn-outline-light btn-sm">
+                              7-12 km <i class="fas fa-snowplow"></i>
+                            </button>
+                            <button type="button" class="btn btn-outline-light btn-sm">
+                              12-... km <i class="fas fa-snowplow"></i>
+                            </button>
+                          </td>
+                        </tr>
+                      </tbody>
+                    </table>
+                  </div>                  
+                </div>
+              </div>              
             </div>
 
             <div class="tab-pane fade" id="nav-saved" role="tabpanel" aria-labelledby="nav-saved-tab">
